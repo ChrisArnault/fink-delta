@@ -8,7 +8,8 @@ import sys
 import os
 import random
 
-rows = 100
+factor = 100000
+rows = 1
 dest = "/user/chris.arnault/xyz"
 batch_size = 1
 
@@ -56,6 +57,8 @@ if __name__ == "__main__":
             rows = int(a[1])
         if a[0] == "batch_size":
             batch_size = int(a[1])
+        if a[0] == "factor":
+            factor = int(a[1])
 
 
     ra_offset = 40.0
@@ -80,14 +83,18 @@ if __name__ == "__main__":
 
     print("============= create the DF with ra|dec|z")
 
-    factor = 1000000
-
     print("factor={}".format(factor))
     print("rows={}".format(rows))
     print("batch_size={}".format(batch_size))
 
-    batch_size *= factor
     rows *= factor
+    batch_size *= factor
+
+    print("real rows={}".format(rows))
+    print("real batch_size={}".format(batch_size))
+
+    ## file_format = "parquet"
+    file_format = "delta"
 
     batches = int(rows/batch_size)
     for batch in range(batches):
@@ -96,22 +103,20 @@ if __name__ == "__main__":
         s = Stepper()
         values = [(ra_value(), dec_value(), z_value()) for i in range(batch_size)]
         df = spark.createDataFrame(values, ['ra','dec', 'z'])
+        df = df.repartition(1000)
         df = df.cache()
         df.count()
         s.show_step("building the dataframe")
 
         s = Stepper()
         if batch == 0:
-            df.coalesce(10000)
-            df.write.format("delta").save(dest)
-            ### df.write.format("parquet").save(dest)
+            df.write.format(file_format).save(dest)
         else:
-            df.coalesce(10000)
-            df.write.format("delta").mode("append").save(dest)
+            df.write.format(file_format).mode("append").save(dest)
             ### df.write.format("parquet").mode("append").save(dest)
         s.show_step("Write block")
 
-        df = spark.read.format("delta").load(dest)
+        df = spark.read.format(file_format).load(dest)
         parts = df.rdd.getNumPartitions()
         print("partitions = {}".format(parts))
 
@@ -119,12 +124,9 @@ if __name__ == "__main__":
 
     print("============= add the column for flux")
     df = df.withColumn('flux', flux_field * rand())
-    df.write.format("delta").mode("append").save(dest)
-    ### df.write.format("parquet").mode("append").save(dest)
+    df.write.format(file_format).mode("append").option("mergeSchema", "true").save(dest)
 
-
-    # df.write.format("delta").partitionBy("ra").mode("overwrite").option("mergeSchema", "true").save(dest)
-    # df.show()
+    df.show()
 
     spark.stop()
     exit()
