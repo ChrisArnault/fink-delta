@@ -1,12 +1,12 @@
 
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import *
-from pyspark.sql.types import *
-
-
 import sys
 import os
 import random
+import time
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import *
+from pyspark.sql.types import *
 
 factor = 100000
 rows = 1
@@ -14,7 +14,6 @@ dest = "/user/chris.arnault/xyz"
 batch_size = 1
 partitions = 1000
 
-import time
 
 class Stepper(object):
     previous_time = None
@@ -45,7 +44,68 @@ class Stepper(object):
 
         return delta
 
+
+ra_offset = 40.0
+ra_field = 40.0
+dec_offset = 20.0
+dec_field = 40.0
+z_offset = 0.0
+z_field = 5.0
+
+
+def ra_value():
+    return ra_offset + random.random() * ra_field
+
+
+def dec_value():
+    return dec_offset + random.random() * dec_field
+
+
+def z_value():
+    return z_offset + random.random() * z_field
+
+
+def bench1(spark, batches):
+    """
+    Loop over batches.
+    All batches with same schema
+
+    :param spark:
+    :param batches:
+    :return:
+    """
+    for batch in range(batches):
+        print("batch #{}".format(batch))
+
+        s = Stepper()
+        values = [(ra_value(), dec_value(), z_value()) for i in range(batch_size)]
+        df = spark.createDataFrame(values, ['ra', 'dec', 'z'])
+        df = df.repartition(partitions, "ra")
+        df = df.cache()
+        df.count()
+        s.show_step("building the dataframe")
+
+        s = Stepper()
+        if batch == 0:
+            df.write.format(file_format).save(dest)
+        else:
+            df.write.format(file_format).mode("append").save(dest)
+        s.show_step("Write block")
+
+    s = Stepper()
+    df = spark.read.format(file_format).load(dest)
+    s.show_step("Read file")
+    parts = df.rdd.getNumPartitions()
+    print("partitions = {}".format(parts))
+
+    df.show()
+
+
 if __name__ == "__main__":
+    global rows
+    global batch_size
+    global partitions
+
     s = Stepper()
     spark = SparkSession.builder.appName("Delta").getOrCreate()
     spark.sparkContext.setLogLevel("ERROR")
@@ -63,24 +123,6 @@ if __name__ == "__main__":
         if a[0] == "partitions":
             partitions = int(a[1])
 
-
-
-    ra_offset = 40.0
-    ra_field = 40.0
-    dec_offset = 20.0
-    dec_field = 40.0
-    z_offset = 0.0
-    z_field = 5.0
-
-    def ra_value():
-      return ra_offset + random.random()*ra_field
-
-    def dec_value():
-      return dec_offset + random.random()*dec_field
-
-    def z_value():
-      return z_offset + random.random()*z_field
-
     s = Stepper()
     os.system("hdfs dfs -rm -r -f {}".format(dest))
     s.show_step("erase the file")
@@ -97,44 +139,22 @@ if __name__ == "__main__":
     print("real rows={}".format(rows))
     print("real batch_size={}".format(batch_size))
 
-    ## file_format = "parquet"
+    # file_format = "parquet"
     file_format = "delta"
 
     batches = int(rows/batch_size)
-    for batch in range(batches):
-        print("batch #{}".format(batch))
 
-        s = Stepper()
-        values = [(ra_value(), dec_value(), z_value()) for i in range(batch_size)]
-        df = spark.createDataFrame(values, ['ra','dec', 'z'])
-        df = df.repartition(partitions, "ra")
-        df = df.cache()
-        df.count()
-        s.show_step("building the dataframe")
+    bench1(spark, batches)
 
-        s = Stepper()
-        if batch == 0:
-            df.write.format(file_format).save(dest)
-        else:
-            df.write.format(file_format).mode("append").save(dest)
+    spark.stop()
+    exit()
 
-        s.show_step("Write block")
-
-        df = spark.read.format(file_format).load(dest)
-        parts = df.rdd.getNumPartitions()
-        print("partitions = {}".format(parts))
-
+"""
     flux_field = 10.0
 
     print("============= add the column for flux")
     df = df.withColumn('flux', flux_field * rand())
     df.write.format(file_format).mode("append").option("mergeSchema", "true").save(dest)
-
-    df.show()
-
-    spark.stop()
-    exit()
-
 
     names = "azertyuiopqsdfghjklmwxcvbn1234567890"
     print("============= add {} columns".format(len(names)))
@@ -153,6 +173,4 @@ if __name__ == "__main__":
     df = spark.read.format("delta").load(dest)
     df.show()
     print("count = {} partitions={}".format(df.count(), df.rdd.getNumPartitions()))
-
-
-    spark.stop()
+"""
