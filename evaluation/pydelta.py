@@ -180,4 +180,14 @@ if __name__ == "__main__":
     df = spark.read.format("delta").load(dest)
     df.show()
     print("count = {} partitions={}".format(df.count(), df.rdd.getNumPartitions()))
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+x = [random.random() for i in range(1000)]
+df = pd.DataFrame({'x': x,})
+hist = df.hist(bins=10)
+plt.show()
+
 """
