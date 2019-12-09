@@ -13,6 +13,7 @@ rows = 1
 dest = "/user/chris.arnault/xyz"
 batch_size = 1
 partitions = 1000
+file_format = "delta"
 
 
 class Stepper(object):
@@ -122,6 +123,8 @@ if __name__ == "__main__":
             factor = int(a[1])
         if a[0] == "partitions":
             partitions = int(a[1])
+        if a[0] == "file_format":
+            file_format = a[1]
 
     s = Stepper()
     os.system("hdfs dfs -rm -r -f {}".format(dest))
@@ -138,9 +141,6 @@ if __name__ == "__main__":
 
     print("real rows={}".format(rows))
     print("real batch_size={}".format(batch_size))
-
-    # file_format = "parquet"
-    file_format = "delta"
 
     batches = int(rows/batch_size)
 
