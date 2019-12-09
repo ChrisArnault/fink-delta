@@ -10,10 +10,11 @@ from pyspark.sql.types import *
 
 factor = 100000
 rows = 1
-dest = "/user/chris.arnault/xyz"
 batch_size = 1
 partitions = 1000
+# file_format = "parquet"
 file_format = "delta"
+dest = "/user/chris.arnault/xyz"
 
 
 class Stepper(object):
@@ -106,6 +107,8 @@ if __name__ == "__main__":
     global rows
     global batch_size
     global partitions
+    global file_format
+    global dest
 
     s = Stepper()
     spark = SparkSession.builder.appName("Delta").getOrCreate()
@@ -125,6 +128,8 @@ if __name__ == "__main__":
             partitions = int(a[1])
         if a[0] == "file_format":
             file_format = a[1]
+
+    dest = "{}_{}".format(dest, file_format)
 
     s = Stepper()
     os.system("hdfs dfs -rm -r -f {}".format(dest))
