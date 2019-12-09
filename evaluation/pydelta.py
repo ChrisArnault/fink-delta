@@ -143,8 +143,8 @@ if __name__ == "__main__":
     print("rows={}".format(conf.rows))
     print("batch_size={}".format(conf.batch_size))
 
-    rows *= conf.factor
-    batch_size *= conf.factor
+    rows = conf.rows * conf.factor
+    batch_size = conf.batch_size * conf.factor
 
     print("real rows={}".format(rows))
     print("real batch_size={}".format(batch_size))
