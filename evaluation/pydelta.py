@@ -87,7 +87,7 @@ def z_value():
     return z_offset + random.random() * z_field
 
 
-def bench1(spark, conf, batches):
+def bench1(spark, conf):
     """
     Loop over batches.
     All batches with same schema
@@ -97,6 +97,15 @@ def bench1(spark, conf, batches):
     :param batches:
     :return:
     """
+
+    rows = conf.rows * conf.factor
+    batch_size = conf.batch_size * conf.factor
+
+    print("real rows={}".format(rows))
+    print("real batch_size={}".format(batch_size))
+
+    batches = int(rows/batch_size)
+
     for batch in range(batches):
         print("batch #{}".format(batch))
 
@@ -143,15 +152,7 @@ if __name__ == "__main__":
     print("rows={}".format(conf.rows))
     print("batch_size={}".format(conf.batch_size))
 
-    rows = conf.rows * conf.factor
-    batch_size = conf.batch_size * conf.factor
-
-    print("real rows={}".format(rows))
-    print("real batch_size={}".format(batch_size))
-
-    batches = int(rows/batch_size)
-
-    bench1(spark, conf, batches)
+    bench1(spark, conf)
 
     spark.stop()
     exit()
