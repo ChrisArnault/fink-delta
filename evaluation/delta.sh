@@ -1,5 +1,5 @@
 
-spark-submit \
+time spark-submit \
   --conf spark.mesos.principal=lsst \
   --conf spark.mesos.secret=secret \
   --conf spark.mesos.role=lsst \

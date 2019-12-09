@@ -12,6 +12,7 @@ factor = 100000
 rows = 1
 dest = "/user/chris.arnault/xyz"
 batch_size = 1
+partitions = 1000
 
 import time
 
@@ -59,6 +60,9 @@ if __name__ == "__main__":
             batch_size = int(a[1])
         if a[0] == "factor":
             factor = int(a[1])
+        if a[0] == "partitions":
+            partitions = int(a[1])
+
 
 
     ra_offset = 40.0
@@ -103,7 +107,7 @@ if __name__ == "__main__":
         s = Stepper()
         values = [(ra_value(), dec_value(), z_value()) for i in range(batch_size)]
         df = spark.createDataFrame(values, ['ra','dec', 'z'])
-        df = df.repartition(1000)
+        df = df.repartition(partitions, "ra")
         df = df.cache()
         df.count()
         s.show_step("building the dataframe")
@@ -113,7 +117,7 @@ if __name__ == "__main__":
             df.write.format(file_format).save(dest)
         else:
             df.write.format(file_format).mode("append").save(dest)
-            ### df.write.format("parquet").mode("append").save(dest)
+
         s.show_step("Write block")
 
         df = spark.read.format(file_format).load(dest)
