@@ -8,13 +8,33 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
 
-factor = 100000
-rows = 1
-batch_size = 1
-partitions = 1000
-# file_format = "parquet"
-file_format = "delta"
-dest = "/user/chris.arnault/xyz"
+
+class Conf(object):
+    def __init__(self):
+        self.factor = 100000
+        self.rows = 1
+        self.batch_size = 1
+        self.partitions = 1000
+        # file_format = "parquet"
+        self.file_format = "delta"
+        self.dest = "/user/chris.arnault/xyz"
+
+    def set(self):
+        for i, arg in enumerate(sys.argv[1:]):
+            a = arg.split("=")
+            print(i, arg, a)
+            if a[0] == "rows":
+                self.rows = int(a[1])
+            if a[0] == "batch_size":
+                self.batch_size = int(a[1])
+            if a[0] == "factor":
+                self.factor = int(a[1])
+            if a[0] == "partitions":
+                self.partitions = int(a[1])
+            if a[0] == "file_format":
+                self.file_format = a[1]
+
+        self.dest = "{}_{}".format(self.dest, self.file_format)
 
 
 class Stepper(object):
@@ -67,12 +87,13 @@ def z_value():
     return z_offset + random.random() * z_field
 
 
-def bench1(spark, batches):
+def bench1(spark, conf, batches):
     """
     Loop over batches.
     All batches with same schema
 
     :param spark:
+    :param conf:
     :param batches:
     :return:
     """
@@ -82,20 +103,20 @@ def bench1(spark, batches):
         s = Stepper()
         values = [(ra_value(), dec_value(), z_value()) for i in range(batch_size)]
         df = spark.createDataFrame(values, ['ra', 'dec', 'z'])
-        df = df.repartition(partitions, "ra")
+        df = df.repartition(conf.partitions, "ra")
         df = df.cache()
         df.count()
         s.show_step("building the dataframe")
 
         s = Stepper()
         if batch == 0:
-            df.write.format(file_format).save(dest)
+            df.write.format(conf.file_format).save(conf.dest)
         else:
-            df.write.format(file_format).mode("append").save(dest)
+            df.write.format(conf.file_format).mode("append").save(conf.dest)
         s.show_step("Write block")
 
     s = Stepper()
-    df = spark.read.format(file_format).load(dest)
+    df = spark.read.format(conf.file_format).load(conf.dest)
     s.show_step("Read file")
     parts = df.rdd.getNumPartitions()
     print("partitions = {}".format(parts))
@@ -104,52 +125,33 @@ def bench1(spark, batches):
 
 
 if __name__ == "__main__":
-    global rows
-    global batch_size
-    global partitions
-    global file_format
-    global dest
+    conf = Conf()
+    conf.set()
 
     s = Stepper()
     spark = SparkSession.builder.appName("Delta").getOrCreate()
     spark.sparkContext.setLogLevel("ERROR")
     s.show_step("init")
 
-    for i, arg in enumerate(sys.argv[1:]):
-        a = arg.split("=")
-        print(i, arg, a)
-        if a[0] == "rows":
-            rows = int(a[1])
-        if a[0] == "batch_size":
-            batch_size = int(a[1])
-        if a[0] == "factor":
-            factor = int(a[1])
-        if a[0] == "partitions":
-            partitions = int(a[1])
-        if a[0] == "file_format":
-            file_format = a[1]
-
-    dest = "{}_{}".format(dest, file_format)
-
     s = Stepper()
-    os.system("hdfs dfs -rm -r -f {}".format(dest))
+    os.system("hdfs dfs -rm -r -f {}".format(conf.dest))
     s.show_step("erase the file")
 
     print("============= create the DF with ra|dec|z")
 
-    print("factor={}".format(factor))
-    print("rows={}".format(rows))
-    print("batch_size={}".format(batch_size))
+    print("factor={}".format(conf.factor))
+    print("rows={}".format(conf.rows))
+    print("batch_size={}".format(conf.batch_size))
 
-    rows *= factor
-    batch_size *= factor
+    rows *= conf.factor
+    batch_size *= conf.factor
 
     print("real rows={}".format(rows))
     print("real batch_size={}".format(batch_size))
 
     batches = int(rows/batch_size)
 
-    bench1(spark, batches)
+    bench1(spark, conf, batches)
 
     spark.stop()
     exit()
