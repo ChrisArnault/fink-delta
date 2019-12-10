@@ -4,8 +4,11 @@ import sys
 import pandas as pd
 import matplotlib.pyplot as plt
 
+data = []
 
 def check(file_name):
+    global data
+
     with open(file_name) as f:
         content = f.readlines()
 
@@ -22,25 +25,25 @@ def check(file_name):
     print(values)
 
 
-    import subprocess
-    cmd = "hdfs dfs -du -h /user/chris.arnault/"
-    result = subprocess.check_output(cmd, shell=True).decode().split("\n")
-    for line in result:
-        if "/user/chris.arnault/xyz" in line:
-            a = line.split()
-            size = float(a[0])
-            scale = a[1]
-            if scale == 'G':
-                size *= 1024
-            print(size)
-            block = size/len(values)
-            print(block)
+    if len(values) > 0:
+        import subprocess
+        cmd = "hdfs dfs -du -h /user/chris.arnault/"
+        result = subprocess.check_output(cmd, shell=True).decode().split("\n")
+        for line in result:
+            if "/user/chris.arnault/xyz" in line:
+                a = line.split()
+                size = float(a[0])
+                scale = a[1]
+                if scale == 'G':
+                    size *= 1024
+                print(size)
+                block = size/len(values)
+                print(block)
 
-    values = [block/v for v in values]
-    print(values)
-
-    plt.plot(values)
-    plt.show()
+        values = [block/v for v in values]
+        print(values)
+        data.append(values)
+        plt.plot(values, label=file_name)
 
 
 
@@ -50,4 +53,5 @@ if __name__ == "__main__":
     for i, arg in enumerate(sys.argv[1:]):
         check(arg)
 
-
+    plt.legend()
+    plt.show()
