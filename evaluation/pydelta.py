@@ -12,19 +12,17 @@ from pyspark.sql.types import *
 class Conf(object):
     def __init__(self):
         self.factor = 100000
-        self.rows = 1
         self.batch_size = 1
         self.partitions = 1000
         # file_format = "parquet"
         self.file_format = "delta"
         self.dest = "/user/chris.arnault/xyz"
+        self.loops = 10
 
     def set(self):
         for i, arg in enumerate(sys.argv[1:]):
             a = arg.split("=")
             print(i, arg, a)
-            if a[0] == "rows":
-                self.rows = int(a[1])
             if a[0] == "batch_size":
                 self.batch_size = int(a[1])
             if a[0] == "factor":
@@ -33,6 +31,8 @@ class Conf(object):
                 self.partitions = int(a[1])
             if a[0] == "file_format":
                 self.file_format = a[1]
+            if a[0] == "loops":
+                self.loops = int(a[1])
 
         self.dest = "{}_{}".format(self.dest, self.file_format)
 
@@ -98,15 +98,11 @@ def bench1(spark, conf):
     :return:
     """
 
-    rows = conf.rows * conf.factor
     batch_size = conf.batch_size * conf.factor
 
-    print("real rows={}".format(rows))
     print("real batch_size={}".format(batch_size))
 
-    batches = int(rows/batch_size)
-
-    for batch in range(batches):
+    for batch in range(conf.loops):
         print("batch #{}".format(batch))
 
         s = Stepper()
@@ -149,8 +145,8 @@ if __name__ == "__main__":
     print("============= create the DF with ra|dec|z")
 
     print("factor={}".format(conf.factor))
-    print("rows={}".format(conf.rows))
     print("batch_size={}".format(conf.batch_size))
+    print("loops={}".format(conf.loops))
 
     bench1(spark, conf)
 
