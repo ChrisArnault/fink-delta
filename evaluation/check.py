@@ -3,10 +3,13 @@ import os
 import sys
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 data = []
 
-def check(file_name):
+colors = ["r", "g", "b", "c", "m", "y", "k"]
+
+def check(num, file_name):
     global data
 
     with open(file_name) as f:
@@ -41,9 +44,11 @@ def check(file_name):
                 print(block)
 
         values = [block/v for v in values]
-        print(values)
+        y_mean = [np.mean(values)]*len(values)
+        print(values, y_mean)
         data.append(values)
-        plt.plot(values, label=file_name)
+        plt.plot(values, label=file_name, color=colors[num])
+        plt.plot(y_mean, color=colors[num])
 
 
 
@@ -51,7 +56,9 @@ if __name__ == "__main__":
     log = sys.argv
 
     for i, arg in enumerate(sys.argv[1:]):
-        check(arg)
+        check(i, arg)
 
+    plt.ylabel("Mo/s")
+    plt.xlabel("batch #")
     plt.legend()
     plt.show()
