@@ -88,6 +88,21 @@ def z_value():
     return z_offset + random.random() * z_field
 
 
+def get_file_size(conf):
+    import subprocess
+    cmd = "hdfs dfs -du -h /user/chris.arnault/ | egrep {}".format(conf.dest)
+    result = subprocess.check_output(cmd, shell=True).decode().split("\n")
+    for line in result:
+        if conf.dest in line:
+            a = line.split()
+            size = float(a[0])
+            scale = a[1]
+            if scale == 'G':
+                size *= 1024
+            return size
+    return 0
+
+
 def bench1(spark, conf):
     """
     Loop over batches.
@@ -121,7 +136,7 @@ def bench1(spark, conf):
             df.write.format(conf.file_format).mode("append").save(conf.dest)
         s.show_step("Write block")
 
-        os.system("hdfs dfs -du -h /user/chris.arnault/ | egrep {}".format(conf.dest))
+        print("file_size={}".format(get_file_size(conf)))
 
     s = Stepper()
     df = spark.read.format(conf.file_format).load(conf.dest)
