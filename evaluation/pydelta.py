@@ -35,6 +35,7 @@ class Conf(object):
                 self.loops = int(a[1])
 
         self.dest = "{}_{}".format(self.dest, self.file_format)
+        print("file_name={}".format(self.dest))
 
 
 class Stepper(object):
@@ -119,6 +120,8 @@ def bench1(spark, conf):
         else:
             df.write.format(conf.file_format).mode("append").save(conf.dest)
         s.show_step("Write block")
+
+        os.system("hdfs dfs -du -h /user/chris.arnault/ | egrep {}".format(conf.dest))
 
     s = Stepper()
     df = spark.read.format(conf.file_format).load(conf.dest)
