@@ -100,7 +100,11 @@ def get_file_size(conf):
             a = line.split()
             size = float(a[0])
             scale = a[1]
-            if scale == 'G':
+            if scale == 'K':
+                size *= 1.0/1024.0
+            elif scale == 'M':
+                size *= 1
+            elif scale == 'G':
                 size *= 1024
             return size
     return 0
