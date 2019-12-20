@@ -87,6 +87,9 @@ def dec_value():
 def z_value():
     return z_offset + random.random() * z_field
 
+def any_value():
+    return 0 + random.random() * 10.0
+
 
 def get_file_size(conf):
     import subprocess
@@ -110,7 +113,6 @@ def bench1(spark, conf):
 
     :param spark:
     :param conf:
-    :param batches:
     :return:
     """
 
@@ -153,6 +155,63 @@ def bench1(spark, conf):
     df.show()
 
 
+def bench2(spark, conf):
+    """
+    Loop over batches.
+    Variable schema at every row
+
+    :param spark:
+    :param conf:
+    :return:
+    """
+
+    batch_size = conf.batch_size * conf.factor
+
+    print("real batch_size={}".format(batch_size))
+
+    names = "azertyuiopqsdfghjklmwxcvbn1234567890"
+
+    previous_size = 0
+
+    column = lambda : 0 + random.random() * 10.0
+
+    for batch in range(conf.loops):
+        print("batch #{}".format(batch))
+
+        total_rows = 0
+        while total_rows < conf.batch_size:
+            s = Stepper()
+            columns = random.randint(1, len(names))
+            rows = random.randint(1, 100)
+            total_rows += rows
+
+            values = [[column() for n in columns] for i in rows]
+            column_names = [names[i] for i in columns]
+            df = spark.createDataFrame(values, column_names)
+            s.show_step("building the dataframe with rows={} for {} total_rows={}".format(rows, column_names, total_rows))
+
+            s = Stepper()
+            if batch == 0:
+                df.write.format(conf.file_format).option("mergeSchema", "true").save(conf.dest)
+            else:
+                df.write.format(conf.file_format).option("mergeSchema", "true").mode("append").save(conf.dest)
+            s.show_step("Write little block")
+
+        new_size = get_file_size(conf)
+        increment = new_size - previous_size
+        previous_size = new_size
+
+        print("file_size={} increment={} rows={}".format(new_size, increment, total_rows))
+
+    s = Stepper()
+    df = spark.read.format(conf.file_format).load(conf.dest)
+    s.show_step("Read file")
+    parts = df.rdd.getNumPartitions()
+    print("partitions = {}".format(parts))
+
+    df.show()
+
+
 if __name__ == "__main__":
     conf = Conf()
     conf.set()
@@ -172,7 +231,7 @@ if __name__ == "__main__":
     print("batch_size={}".format(conf.batch_size))
     print("loops={}".format(conf.loops))
 
-    bench1(spark, conf)
+    bench2(spark, conf)
 
     spark.stop()
     exit()
