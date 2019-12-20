@@ -61,7 +61,7 @@ class Stepper(object):
             s = d - (m*60)
             t = '{}h{}h{:.3f}s'.format(h, m, s)
 
-        print('--------------------------------', label, t)
+        print('--------------------------------', label, '|', t)
 
         self.previous_time = now
 
@@ -183,6 +183,8 @@ def bench2(spark, conf):
     for batch in range(conf.loops):
         print("batch #{}".format(batch))
 
+        s0 = Stepper()
+
         total_rows = 0
         while total_rows < batch_size:
             s = Stepper()
@@ -210,7 +212,7 @@ def bench2(spark, conf):
         increment = new_size - previous_size
         previous_size = new_size
 
-        print("file_size={} increment={} rows={}".format(new_size, increment, total_rows))
+        s0.show_step("file_size={} increment={} rows={}".format(new_size, increment, total_rows))
 
     s = Stepper()
     df = spark.read.format(conf.file_format).load(conf.dest)

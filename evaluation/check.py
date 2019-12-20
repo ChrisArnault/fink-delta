@@ -27,7 +27,7 @@ def check(num, file_name):
     start_batch = False
     value = None
 
-    keys = ("batch #", "Write block 0h0m", "increment=")
+    keys = ("batch #", "| 0h0m", "increment=")
 
     for line in content:
         if "batch #" in line:
