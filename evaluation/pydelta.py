@@ -187,7 +187,7 @@ def bench2(spark, conf):
         while total_rows < batch_size:
             s = Stepper()
             columns = random.randint(3, len(names))
-            rows = random.randint(1, 1000)
+            rows = random.randint(1, conf.factor/10)
             total_rows += rows
 
             values = [[column() for n in range(columns)] for i in range(1, rows)]
