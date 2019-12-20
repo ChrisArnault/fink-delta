@@ -175,6 +175,7 @@ def bench2(spark, conf):
 
     column = lambda : 0 + random.random() * 10.0
 
+    first = True
     for batch in range(conf.loops):
         print("batch #{}".format(batch))
 
@@ -191,10 +192,11 @@ def bench2(spark, conf):
             s.show_step("building the dataframe with rows={} for {} total_rows={}".format(rows, column_names, total_rows))
 
             s = Stepper()
-            if batch == 0:
+            if first:
                 df.write.format(conf.file_format).option("mergeSchema", "true").save(conf.dest)
+                first = False
             else:
-                df.write.format(conf.file_format).option("mergeSchema", "true").mode("append").save(conf.dest)
+                df.write.format(conf.file_format).mode("overwrite").option("mergeSchema", "true").mode("append").save(conf.dest)
             s.show_step("Write little block")
 
         new_size = get_file_size(conf)
