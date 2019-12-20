@@ -118,6 +118,8 @@ def bench1(spark, conf):
 
     print("real batch_size={}".format(batch_size))
 
+    previous_size = 0
+
     for batch in range(conf.loops):
         print("batch #{}".format(batch))
 
@@ -136,7 +138,11 @@ def bench1(spark, conf):
             df.write.format(conf.file_format).mode("append").save(conf.dest)
         s.show_step("Write block")
 
-        print("file_size={}".format(get_file_size(conf)))
+        new_size = get_file_size(conf)
+        increment = new_size - previous_size
+        previous_size = new_size
+
+        print("file_size={} increment={}".format(new_size, increment))
 
     s = Stepper()
     df = spark.read.format(conf.file_format).load(conf.dest)
