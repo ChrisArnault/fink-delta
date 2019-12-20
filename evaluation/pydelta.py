@@ -185,8 +185,8 @@ def bench2(spark, conf):
             rows = random.randint(1, 100)
             total_rows += rows
 
-            values = [[column() for n in columns] for i in rows]
-            column_names = [names[i] for i in columns]
+            values = [[column() for n in range(1, columns)] for i in range(1, rows)]
+            column_names = [names[i] for i in range(1, columns)]
             df = spark.createDataFrame(values, column_names)
             s.show_step("building the dataframe with rows={} for {} total_rows={}".format(rows, column_names, total_rows))
 
