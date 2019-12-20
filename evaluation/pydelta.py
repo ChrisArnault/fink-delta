@@ -186,12 +186,12 @@ def bench2(spark, conf):
         total_rows = 0
         while total_rows < conf.batch_size:
             s = Stepper()
-            columns = random.randint(1, len(names))
+            columns = random.randint(3, len(names))
             rows = random.randint(1, 100)
             total_rows += rows
 
-            values = [[column() for n in range(1, columns)] for i in range(1, rows)]
-            column_names = [names[i] for i in range(1, columns)]
+            values = [[column() for n in range(columns)] for i in range(1, rows)]
+            column_names = [names[i] for i in range(columns)]
             df = spark.createDataFrame(values, column_names)
             s.show_step("building the dataframe with rows={} for {} total_rows={}".format(rows, column_names, total_rows))
 
