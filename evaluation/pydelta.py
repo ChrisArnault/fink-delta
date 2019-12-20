@@ -187,7 +187,7 @@ def bench2(spark, conf):
 
         total_rows = 0
         while total_rows < batch_size:
-            s = Stepper()
+            # s = Stepper()
             columns = random.randint(3, len(names))
             rows = random.randint(1, conf.factor/10)
             total_rows += rows
@@ -198,15 +198,15 @@ def bench2(spark, conf):
                 df = spark.createDataFrame(values, column_names)
             except:
                 print("bad frame")
-            s.show_step("    building the dataframe with rows={} for {} total_rows={}".format(rows, column_names, total_rows))
+            # s.show_step("    building the dataframe with rows={} for {} total_rows={}".format(rows, column_names, total_rows))
 
-            s = Stepper()
+            # s = Stepper()
             if first:
                 df.write.format(conf.file_format).option("mergeSchema", "true").save(conf.dest)
                 first = False
             else:
                 df.write.format(conf.file_format).mode("overwrite").option("mergeSchema", "true").mode("append").save(conf.dest)
-            s.show_step("    Write little block total_rows={} rows={} columns={}".format(total_rows, rows, columns))
+            # s.show_step("    Write little block total_rows={} rows={} columns={}".format(total_rows, rows, columns))
 
         new_size = get_file_size(conf)
         increment = new_size - previous_size
