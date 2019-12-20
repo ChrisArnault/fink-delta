@@ -244,7 +244,7 @@ if __name__ == "__main__":
 
     bench2(spark, conf)
 
-    spark.stop()
+    # spark.stop()
     exit()
 
 """
