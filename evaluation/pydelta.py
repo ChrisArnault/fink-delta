@@ -193,7 +193,7 @@ def bench2(spark, conf):
             values = [[column() for n in range(columns)] for i in range(1, rows)]
             column_names = [names[i] for i in range(columns)]
             df = spark.createDataFrame(values, column_names)
-            s.show_step("building the dataframe with rows={} for {} total_rows={}".format(rows, column_names, total_rows))
+            s.show_step("    building the dataframe with rows={} for {} total_rows={}".format(rows, column_names, total_rows))
 
             s = Stepper()
             if first:
@@ -201,7 +201,7 @@ def bench2(spark, conf):
                 first = False
             else:
                 df.write.format(conf.file_format).mode("overwrite").option("mergeSchema", "true").mode("append").save(conf.dest)
-            s.show_step("Write little block")
+            s.show_step("    Write little block total_rows={} rows={} columns={}".format(total_rows, rows, columns))
 
         new_size = get_file_size(conf)
         increment = new_size - previous_size
