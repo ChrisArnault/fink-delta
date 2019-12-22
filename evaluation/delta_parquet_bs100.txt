@@ -1,0 +1,24 @@
+0 format=parquet ['format', 'parquet']
+1 loops=30 ['loops', '30']
+2 batch_size=100 ['batch_size', '100']
+file_name=/user/chris.arnault/xyz_delta
+-------------------------------- init | 0h0m3.578s
+Deleted /user/chris.arnault/xyz_delta
+-------------------------------- erase the file | 0h0m3.671s
+============= create the DF with ra|dec|z
+factor=100000
+batch_size=100
+loops=30
+real batch_size=10000000
+batch #0
+bad frame
+-------------------------------- file_size=2969.6 increment=2969.6 rows=10006592 | 2h28h43.579s
+batch #1
+-------------------------------- file_size=7475.2 increment=4505.6 rows=10002047 | 4h18h13.534s
+batch #2
+-------------------------------- file_size=13209.6 increment=5734.400000000001 rows=10005843 | 6h10h35.580s
+batch #3
+-------------------------------- file_size=20377.6 increment=7167.999999999998 rows=10000203 | 7h50h47.432s
+batch #4
+-------------------------------- file_size=28876.8 increment=8499.2 rows=10004102 | 10h5h22.233s
+batch #5
