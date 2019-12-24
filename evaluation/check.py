@@ -21,6 +21,8 @@ class Value(object):
 
 
 def check(num, file_name):
+    print("file name ", file_name)
+
     with open(file_name) as f:
         content = f.readlines()
 
@@ -40,9 +42,13 @@ def check(num, file_name):
             start_batch = True
         if start_batch and (keys[1] in line):
             t = line.split(keys[1])[1]
-            m = re.match("([0-9]+)[h]([0-9]+)m([0-9]+)[.]([0-9]+)[s]", t)
-            value.time = float(m.group(1))*3600.0 + float(m.group(2))*60.0 + float(m.group(3)) + float(m.group(4))
-            # print("time={}".format(value.time))
+            m = re.match("([0-9]+)[d]([0-9]+)[h]([0-9]+)m([0-9]+[.][0-9]+)[s]", t)
+            # print('s=', float(m.group(1))*24*3600, float(m.group(2))*3600, float(m.group(3))*60, float(m.group(4)))
+            value.time = float(m.group(1))*24*3600 + \
+                         float(m.group(2))*3600 + \
+                         float(m.group(3))*60 + \
+                         float(m.group(4))
+            print("time={}".format(value.time))
         if start_batch and (keys[2] in line):
             t = line.split(keys[2])[1]
             t = t.split(" ")[0]
